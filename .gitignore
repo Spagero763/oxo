@@ -48,3 +48,8 @@ dev.log
 # secrets
 .env
 contracts/.env
+
+# foundry
+contracts/out
+contracts/cache
+contracts/broadcast
