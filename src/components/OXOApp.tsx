@@ -11,6 +11,7 @@ import { TopBar } from "./TopBar";
 import { Home } from "./Home";
 import { GameScreen } from "./GameScreen";
 import { LeaderboardView } from "./LeaderboardView";
+import { Footer } from "./Footer";
 
 type Screen = "home" | "game" | "leaderboard";
 
@@ -74,6 +75,8 @@ export function OXOApp() {
             )}
           </AnimatePresence>
         </div>
+
+        <Footer />
       </div>
     </main>
   );
