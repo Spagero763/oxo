@@ -44,3 +44,7 @@ next-env.d.ts
 dev.log
 
 .vercel
+
+# secrets
+.env
+contracts/.env
