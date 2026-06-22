@@ -1,0 +1,143 @@
+@import "tailwindcss";
+
+/* ----------------------------------------------------------------------------
+   OXO — design tokens (Tailwind v4 @theme)
+---------------------------------------------------------------------------- */
+@theme {
+  --color-void: #060609;
+  --color-void-900: #0a0a11;
+  --color-void-800: #0f0f18;
+  --color-void-700: #16161f;
+  --color-line: rgba(255, 255, 255, 0.08);
+
+  --color-ink: #f4f4fb;
+  --color-ink-dim: #a6a6bd;
+  --color-ink-faint: #5e5e76;
+
+  --color-violet: #7c5cff;
+  --color-violet-bright: #a892ff;
+  --color-teal: #22d3c5;
+  --color-teal-bright: #5eead4;
+  --color-gold: #f6d66b;
+  --color-rose: #fb7185;
+
+  --font-display: var(--font-display-src), "Space Grotesk", system-ui, sans-serif;
+  --font-sans: var(--font-sans-src), system-ui, sans-serif;
+
+  --shadow-card: 0 24px 60px -28px rgba(0, 0, 0, 0.85);
+  --shadow-glow-violet: 0 0 60px -10px rgba(124, 92, 255, 0.55);
+  --shadow-glow-teal: 0 0 60px -10px rgba(34, 211, 197, 0.5);
+}
+
+@layer base {
+  :root {
+    color-scheme: dark;
+  }
+  html {
+    -webkit-tap-highlight-color: transparent;
+  }
+  body {
+    background: var(--color-void);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    overflow-x: hidden;
+  }
+  ::selection {
+    background: rgba(124, 92, 255, 0.4);
+    color: #fff;
+  }
+  .nums {
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: "tnum";
+  }
+}
+
+/* ----------------------------------------------------------------------------
+   Utilities
+---------------------------------------------------------------------------- */
+@layer utilities {
+  .glass {
+    background: linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0.06),
+      rgba(255, 255, 255, 0.02)
+    );
+    border: 1px solid var(--color-line);
+    backdrop-filter: blur(14px) saturate(140%);
+  }
+  .glass-strong {
+    background: linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0.09),
+      rgba(255, 255, 255, 0.03)
+    );
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    backdrop-filter: blur(20px) saturate(150%);
+  }
+  .text-gradient {
+    background: linear-gradient(120deg, #fff 0%, #a892ff 45%, #5eead4 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  .ring-grad {
+    background: linear-gradient(135deg, var(--color-violet), var(--color-teal));
+  }
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+}
+
+/* ----------------------------------------------------------------------------
+   Keyframes / ambient motion
+---------------------------------------------------------------------------- */
+@keyframes aurora-drift {
+  0%   { transform: translate3d(-6%, -4%, 0) scale(1); }
+  50%  { transform: translate3d(6%, 4%, 0) scale(1.12); }
+  100% { transform: translate3d(-6%, -4%, 0) scale(1); }
+}
+@keyframes aurora-drift-2 {
+  0%   { transform: translate3d(5%, 3%, 0) scale(1.05); }
+  50%  { transform: translate3d(-5%, -5%, 0) scale(1); }
+  100% { transform: translate3d(5%, 3%, 0) scale(1.05); }
+}
+@keyframes float-slow {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-10px); }
+}
+@keyframes shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+@keyframes pulse-ring {
+  0%   { box-shadow: 0 0 0 0 rgba(124, 92, 255, 0.45); }
+  70%  { box-shadow: 0 0 0 16px rgba(124, 92, 255, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(124, 92, 255, 0); }
+}
+@keyframes grain {
+  0%, 100% { transform: translate(0, 0); }
+  10% { transform: translate(-5%, -10%); }
+  30% { transform: translate(3%, -15%); }
+  50% { transform: translate(12%, 9%); }
+  70% { transform: translate(9%, 4%); }
+  90% { transform: translate(-1%, 7%); }
+}
+
+.aurora-a { animation: aurora-drift 18s ease-in-out infinite; }
+.aurora-b { animation: aurora-drift-2 22s ease-in-out infinite; }
+.float-slow { animation: float-slow 5s ease-in-out infinite; }
+.pulse-ring { animation: pulse-ring 2.4s ease-out infinite; }
+.shimmer {
+  background-size: 200% 100%;
+  animation: shimmer 2.4s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .aurora-a, .aurora-b, .float-slow, .pulse-ring, .shimmer {
+    animation: none !important;
+  }
+}
