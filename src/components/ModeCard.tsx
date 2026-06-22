@@ -69,7 +69,13 @@ export function ModeCard({
 
       <div
         className="mt-5 inline-flex items-center justify-center gap-2 rounded-2xl py-3 text-sm font-bold text-void transition-transform"
-        style={{ background: affordable ? `linear-gradient(135deg, ${accent}, ${violet ? "#5eead4" : "#a892ff"})` : "#2a2a36" }}
+        style={{
+          background: affordable
+            ? `linear-gradient(180deg, color-mix(in srgb, ${accent} 78%, #ffffff), ${accent})`
+            : "#23232e",
+          boxShadow: affordable ? `0 10px 26px -10px ${accent}` : "none",
+          color: affordable ? "#0a0a11" : "#5e5e76",
+        }}
       >
         {affordable ? (
           <>

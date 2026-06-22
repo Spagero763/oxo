@@ -30,18 +30,18 @@ export function Home({
   return (
     <div className="flex w-full max-w-md flex-col">
       {/* hero */}
-      <motion.div variants={fade} custom={0} initial="hidden" animate="show" className="mt-6 text-center">
-        <span className="inline-flex items-center gap-1.5 rounded-full glass px-3 py-1 text-[11px] font-semibold text-ink-dim">
+      <motion.div variants={fade} custom={0} initial="hidden" animate="show" className="mt-7">
+        <span className="inline-flex items-center gap-1.5 rounded-full border border-line bg-white/[0.02] px-3 py-1 text-[11px] font-medium text-ink-dim">
           <span className="h-1.5 w-1.5 rounded-full bg-teal-bright shadow-[0_0_8px_#5eead4]" />
-          Skill game · on Celo
+          Onchain noughts &amp; crosses · Celo
         </span>
-        <h1 className="mt-4 font-display text-5xl font-bold leading-[1.05] tracking-tight">
-          <span className="text-gradient">Noughts.</span>
+        <h1 className="mt-5 font-display text-[3.4rem] font-bold leading-[0.95] tracking-tight text-ink">
+          Outsmart
           <br />
-          <span className="text-ink">Crosses. Cash.</span>
+          the <span className="text-violet-bright">machine.</span>
         </h1>
-        <p className="mx-auto mt-3 max-w-xs text-sm leading-relaxed text-ink-dim">
-          Stake a sliver of CELO, outthink the machine, and watch the pot swing your way. Pick a mode to begin.
+        <p className="mt-4 max-w-[19rem] text-[15px] leading-relaxed text-ink-dim">
+          Stake a sliver of CELO each round. Beat the bot and take the pot. Draws hand your stake straight back.
         </p>
       </motion.div>
 

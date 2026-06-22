@@ -19,7 +19,7 @@ export const metadata: Metadata = {
     "A sleek noughts-and-crosses arena. Pick your mode, stake a little, outsmart the machine.",
   other: {
     "talentapp:project_verification":
-      "060e9ad6da16fa013747b61aff42762a8e4d4b686ac1a3cd9f97c7f7c6ba636c637d44c302176dc808f47c858da1fdfe740265c2bef7505452c634ab94320b40",
+      "8c74c639dab3652d47259846dfa726ceb9a9e2c1c884b656f01d3431e58ec7cf109460aeeec9cccb3868986c1c0467895c41e13c4f3a6eaddaabb24bab8ee5e6",
   },
 };
 
