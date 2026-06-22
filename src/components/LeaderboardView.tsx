@@ -24,7 +24,9 @@ export function LeaderboardView({ onHome }: { onHome: () => void }) {
         <span className="rounded-full glass px-3 py-1.5 text-xs font-semibold text-gold">Leaderboard</span>
       </div>
 
-      <h1 className="mt-5 font-display text-3xl font-bold text-gradient">Hall of fame</h1>
+      <h1 className="mt-5 font-display text-3xl font-bold text-ink">
+        Hall of <span className="text-gold">fame</span>
+      </h1>
       <p className="mt-1 text-sm text-ink-dim">
         Ranked by net CELO. You sit at #{myRank} with {me?.wins ?? 0}W · {me?.losses ?? 0}L.
       </p>
