@@ -3,8 +3,9 @@
 import { useCallback, useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { ArrowLeft, Copy, Check, RefreshCw, ArrowUpRight, LogOut, ExternalLink, Loader2 } from "lucide-react";
-import { usePrivy, useWallets, useSendTransaction } from "@privy-io/react-auth";
+import { usePrivy, useWallets } from "@privy-io/react-auth";
 import { isAddress, parseEther } from "viem";
+import { useOnchain } from "@/hooks/useOnchain";
 import { celoBalance } from "@/lib/celo";
 import { fmtCelo, shortAddr } from "@/lib/format";
 import { CELOSCAN } from "@/lib/contract";
@@ -14,7 +15,7 @@ import { cn } from "@/lib/cn";
 export function WalletScreen({ onHome }: { onHome: () => void }) {
   const { ready, authenticated, login, logout } = usePrivy();
   const { wallets } = useWallets();
-  const { sendTransaction } = useSendTransaction();
+  const { send: sendCelo } = useOnchain();
   const address = wallets[0]?.address as `0x${string}` | undefined;
 
   const [balance, setBalance] = useState<number | null>(null);
@@ -69,16 +70,7 @@ export function WalletScreen({ onHome }: { onHome: () => void }) {
     }
     setSending(true);
     try {
-      const res = (await sendTransaction({
-        to: to as `0x${string}`,
-        value: parseEther(amount),
-        chainId: 42220,
-      })) as unknown;
-      // Privy versions differ on the return shape — accept any of them.
-      const hash =
-        (res as { hash?: string })?.hash ??
-        (res as { transactionHash?: string })?.transactionHash ??
-        (typeof res === "string" ? res : null);
+      const hash = await sendCelo(to as `0x${string}`, parseEther(amount));
       setTxHash(hash);
       play("coin");
       setAmount("");

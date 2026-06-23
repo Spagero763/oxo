@@ -1,8 +1,9 @@
 "use client";
 
 import { useCallback } from "react";
-import { useSendTransaction } from "@privy-io/react-auth";
-import { encodeFunctionData } from "viem";
+import { useWallets } from "@privy-io/react-auth";
+import { createWalletClient, custom, encodeFunctionData } from "viem";
+import { celo } from "viem/chains";
 import { celoClient } from "@/lib/celo";
 import { OXO_ABI, MODE_INDEX } from "@/lib/oxoAbi";
 import { OXO_CONTRACT } from "@/lib/contract";
@@ -18,37 +19,55 @@ export function newGameId(): `0x${string}` {
   return ("0x" + Array.from(bytes).map((b) => b.toString(16).padStart(2, "0")).join("")) as `0x${string}`;
 }
 
-function txHashOf(res: unknown): `0x${string}` {
-  const h =
-    (res as { hash?: string })?.hash ??
-    (res as { transactionHash?: string })?.transactionHash ??
-    (typeof res === "string" ? res : null);
-  if (!h) throw new Error("No transaction hash returned");
-  return h as `0x${string}`;
-}
-
 export function useOnchain() {
-  const { sendTransaction } = useSendTransaction();
+  const { wallets } = useWallets();
 
-  /** Send the stake tx from the embedded wallet and wait for it to mine. */
+  /** A viem wallet client for whatever wallet is connected (MetaMask OR the
+   *  Privy embedded wallet), switched to Celo. Works for both. */
+  const walletClientFor = useCallback(async () => {
+    const wallet = wallets[0];
+    if (!wallet) throw new Error("Connect a wallet first");
+    try {
+      await wallet.switchChain(celo.id);
+    } catch {
+      /* embedded wallets are already on Celo; ignore */
+    }
+    const provider = await wallet.getEthereumProvider();
+    return createWalletClient({
+      account: wallet.address as `0x${string}`,
+      chain: celo,
+      transport: custom(provider),
+    });
+  }, [wallets]);
+
+  /** Stake into the escrow from the connected wallet and wait for it to mine. */
   const stake = useCallback(
     async (gameId: `0x${string}`, mode: Difficulty, stakeWei: string): Promise<`0x${string}`> => {
+      const wc = await walletClientFor();
       const data = encodeFunctionData({
         abi: OXO_ABI,
         functionName: "stake",
         args: [gameId, MODE_INDEX[mode]],
       });
-      const res = await sendTransaction({
+      const hash = await wc.sendTransaction({
         to: OXO_CONTRACT as `0x${string}`,
         value: BigInt(stakeWei),
         data,
-        chainId: 42220,
       });
-      const hash = txHashOf(res);
       await celoClient.waitForTransactionReceipt({ hash });
       return hash;
     },
-    [sendTransaction]
+    [walletClientFor]
+  );
+
+  /** Plain CELO transfer from the connected wallet (used by the wallet panel). */
+  const send = useCallback(
+    async (to: `0x${string}`, value: bigint): Promise<`0x${string}`> => {
+      const wc = await walletClientFor();
+      const hash = await wc.sendTransaction({ to, value });
+      return hash;
+    },
+    [walletClientFor]
   );
 
   /** Ask the relayer backend to settle the result, then wait for the tx. */
@@ -73,5 +92,5 @@ export function useOnchain() {
     []
   );
 
-  return { stake, settle };
+  return { stake, send, settle };
 }
