@@ -1,16 +1,37 @@
 "use client";
 
+import { useCallback, useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { ArrowLeft, Crown } from "lucide-react";
-import { leaderboard, useStore } from "@/lib/store";
-import { fmtCelo, signed } from "@/lib/format";
+import { ArrowLeft, Crown, RefreshCw, Loader2, ExternalLink } from "lucide-react";
+import { useWallets } from "@privy-io/react-auth";
+import { fetchOnchainLeaderboard, type OnchainEntry } from "@/lib/onchainLeaderboard";
+import { CELOSCAN, contractUrl } from "@/lib/contract";
+import { signed, shortAddr } from "@/lib/format";
+import { play } from "@/lib/sfx";
 import { cn } from "@/lib/cn";
 
 export function LeaderboardView({ onHome }: { onHome: () => void }) {
-  useStore(); // re-render when stats change
-  const rows = leaderboard();
-  const me = rows.find((r) => r.you);
-  const myRank = rows.findIndex((r) => r.you) + 1;
+  const { wallets } = useWallets();
+  const me = wallets[0]?.address?.toLowerCase();
+  const [rows, setRows] = useState<OnchainEntry[] | null>(null);
+  const [err, setErr] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    setErr(null);
+    try {
+      setRows(await fetchOnchainLeaderboard());
+    } catch {
+      setErr("Could not read the chain. Try again.");
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    load();
+  }, [load]);
 
   return (
     <div className="flex w-full max-w-md flex-col">
@@ -21,29 +42,56 @@ export function LeaderboardView({ onHome }: { onHome: () => void }) {
         >
           <ArrowLeft className="h-4 w-4" /> Lobby
         </button>
-        <span className="rounded-full glass px-3 py-1.5 text-xs font-semibold text-gold">Leaderboard</span>
+        <button
+          onClick={() => { play("tap"); load(); }}
+          className="inline-flex items-center gap-2 rounded-full glass px-3 py-1.5 text-xs font-semibold text-gold"
+        >
+          <RefreshCw className={cn("h-3.5 w-3.5", loading && "animate-spin")} /> Leaderboard
+        </button>
       </div>
 
       <h1 className="mt-5 font-display text-3xl font-bold text-ink">
         Hall of <span className="text-gold">fame</span>
       </h1>
-      <p className="mt-1 text-sm text-ink-dim">
-        Ranked by net CELO. You sit at #{myRank} with {me?.wins ?? 0}W · {me?.losses ?? 0}L.
+      <p className="mt-1 flex items-center gap-1 text-sm text-ink-dim">
+        Live, on-chain results from
+        <a href={contractUrl()} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-0.5 font-medium text-teal-bright">
+          the escrow <ExternalLink className="h-3 w-3" />
+        </a>
       </p>
 
       <div className="mt-5 flex flex-col gap-1.5">
-        {rows.map((r, i) => {
+        {loading && !rows && (
+          <div className="flex items-center justify-center gap-2 py-12 text-sm text-ink-faint">
+            <Loader2 className="h-4 w-4 animate-spin" /> Reading the chain…
+          </div>
+        )}
+
+        {err && <p className="py-10 text-center text-sm text-rose">{err}</p>}
+
+        {rows && rows.length === 0 && (
+          <div className="rounded-3xl glass p-8 text-center">
+            <p className="font-display text-lg font-bold text-ink">No games yet</p>
+            <p className="mt-1 text-sm text-ink-dim">Be the first to stake, beat the bot, and top the board.</p>
+          </div>
+        )}
+
+        {rows?.map((r, i) => {
           const rank = i + 1;
+          const isMe = me && r.address.toLowerCase() === me;
           const podium = rank <= 3;
           return (
-            <motion.div
-              key={r.id}
+            <motion.a
+              key={r.address}
+              href={`${CELOSCAN}/address/${r.address}`}
+              target="_blank"
+              rel="noopener noreferrer"
               initial={{ opacity: 0, x: -12 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: Math.min(i * 0.035, 0.4) }}
               className={cn(
                 "flex items-center gap-3 rounded-2xl px-3 py-2.5 transition-colors",
-                r.you ? "glass-strong ring-1 ring-violet/40" : "bg-white/[0.02]"
+                isMe ? "glass-strong ring-1 ring-violet/40" : "bg-white/[0.02] hover:bg-white/[0.05]"
               )}
             >
               <span
@@ -57,10 +105,9 @@ export function LeaderboardView({ onHome }: { onHome: () => void }) {
               >
                 {podium ? <Crown className="h-3.5 w-3.5" /> : rank}
               </span>
-              <span className="h-7 w-7 shrink-0 rounded-full" style={{ background: r.color }} />
               <div className="min-w-0 flex-1">
-                <p className={cn("truncate text-sm font-semibold", r.you ? "text-violet-bright" : "text-ink")}>
-                  {r.name} {r.you && <span className="text-ink-faint">(you)</span>}
+                <p className={cn("nums truncate text-sm font-semibold", isMe ? "text-violet-bright" : "text-ink")}>
+                  {shortAddr(r.address)} {isMe && <span className="text-ink-faint">(you)</span>}
                 </p>
                 <p className="nums text-[11px] text-ink-faint">
                   {r.wins}W · {r.losses}L · {r.draws}D
@@ -74,37 +121,9 @@ export function LeaderboardView({ onHome }: { onHome: () => void }) {
               >
                 {signed(r.net)}
               </span>
-            </motion.div>
+            </motion.a>
           );
         })}
-      </div>
-
-      <RecentGames />
-    </div>
-  );
-}
-
-function RecentGames() {
-  const { history } = useStore();
-  if (history.length === 0) return null;
-  return (
-    <div className="mt-6">
-      <p className="mb-2 text-[11px] uppercase tracking-widest text-ink-faint">Your recent games</p>
-      <div className="flex flex-wrap gap-1.5">
-        {history.slice(0, 12).map((g) => (
-          <span
-            key={g.id}
-            title={`${g.mode} · ${signed(g.delta)} CELO`}
-            className={cn(
-              "grid h-7 w-7 place-items-center rounded-lg text-[11px] font-bold",
-              g.outcome === "win" && "bg-gold/15 text-gold",
-              g.outcome === "lose" && "bg-rose/15 text-rose",
-              g.outcome === "draw" && "bg-white/5 text-ink-faint"
-            )}
-          >
-            {g.outcome === "win" ? "W" : g.outcome === "lose" ? "L" : "D"}
-          </span>
-        ))}
       </div>
     </div>
   );
