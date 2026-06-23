@@ -171,9 +171,10 @@ export function refundStake(mode: Difficulty): void {
  * the leaderboard. The stake was already removed by `placeStake`.
  * Returns the CELO delta for this game (relative to the stake).
  */
-export function settleGame(mode: Difficulty, outcome: Outcome): number {
+export function settleGame(mode: Difficulty, outcome: Outcome, opts?: { onchain?: boolean }): number {
   load();
   const cfg = MODES[mode];
+  const onchain = opts?.onchain ?? false;
   let balanceCredit = 0; // returned to balance now
   let delta = 0; // net vs the stake
 
@@ -209,7 +210,8 @@ export function settleGame(mode: Difficulty, outcome: Outcome): number {
   };
 
   mutate({
-    balance: round(state.balance + balanceCredit),
+    // on-chain games move real funds via the contract, so leave the demo balance alone
+    balance: onchain ? state.balance : round(state.balance + balanceCredit),
     stats,
     history: [record, ...state.history].slice(0, 30),
   });
