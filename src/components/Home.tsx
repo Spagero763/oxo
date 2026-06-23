@@ -1,12 +1,13 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Trophy, ChevronRight, RefreshCw } from "lucide-react";
+import { Trophy, ChevronRight, RefreshCw, Wallet, Gamepad2, Coins } from "lucide-react";
 import { MODE_LIST } from "@/lib/modes";
 import { leaderboard, resetBalance, useStore } from "@/lib/store";
 import { fmtCelo, signed } from "@/lib/format";
 import { play } from "@/lib/sfx";
 import { ModeCard } from "./ModeCard";
+import { ShareButton } from "./ShareButton";
 import { cn } from "@/lib/cn";
 import type { Difficulty } from "@/lib/engine";
 
@@ -31,10 +32,13 @@ export function Home({
     <div className="flex w-full max-w-md flex-col">
       {/* hero */}
       <motion.div variants={fade} custom={0} initial="hidden" animate="show" className="mt-7">
-        <span className="inline-flex items-center gap-1.5 rounded-full border border-line bg-white/[0.02] px-3 py-1 text-[11px] font-medium text-ink-dim">
-          <span className="h-1.5 w-1.5 rounded-full bg-teal-bright shadow-[0_0_8px_#5eead4]" />
-          Onchain noughts &amp; crosses · Celo
-        </span>
+        <div className="flex items-center justify-between gap-2">
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-line bg-white/[0.02] px-3 py-1 text-[11px] font-medium text-ink-dim">
+            <span className="h-1.5 w-1.5 rounded-full bg-teal-bright shadow-[0_0_8px_#5eead4]" />
+            Onchain noughts &amp; crosses · Celo
+          </span>
+          <ShareButton />
+        </div>
         <h1 className="mt-5 font-display text-[3.4rem] font-bold leading-[0.95] tracking-tight text-ink">
           Outsmart
           <br />
@@ -77,6 +81,29 @@ export function Home({
           <RefreshCw className="h-4 w-4" /> Top up demo balance
         </button>
       )}
+
+      {/* how it works */}
+      <motion.div variants={fade} custom={3} initial="hidden" animate="show" className="mt-5">
+        <p className="mb-2 text-[11px] uppercase tracking-widest text-ink-faint">How it works</p>
+        <div className="grid grid-cols-3 gap-2">
+          {[
+            { icon: Wallet, t: "Pick a mode", d: "Normal or Hard" },
+            { icon: Gamepad2, t: "Beat the bot", d: "You play X, first move" },
+            { icon: Coins, t: "Take the pot", d: "Win pays up to 3×" },
+          ].map((s, i) => (
+            <div key={s.t} className="rounded-2xl border border-line bg-white/[0.02] p-3">
+              <div className="flex items-center gap-1.5">
+                <span className="grid h-6 w-6 place-items-center rounded-lg bg-white/5 text-violet-bright">
+                  <s.icon className="h-3.5 w-3.5" />
+                </span>
+                <span className="nums text-[11px] font-bold text-ink-faint">{i + 1}</span>
+              </div>
+              <p className="mt-2 text-xs font-semibold leading-tight text-ink">{s.t}</p>
+              <p className="mt-0.5 text-[10px] leading-tight text-ink-faint">{s.d}</p>
+            </div>
+          ))}
+        </div>
+      </motion.div>
 
       {/* leaderboard preview */}
       <motion.button
