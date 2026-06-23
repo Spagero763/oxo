@@ -83,6 +83,10 @@ export async function POST(req: NextRequest) {
       abi: OXO_ABI,
       functionName: "settle",
       args: [gameId as `0x${string}`, OUTCOME_CODE[outcome]],
+      // settle() is a small fixed-shape call (~70k). A fixed limit avoids the
+      // node's estimate-time "gas exceeds allowance" failure when the relayer
+      // balance is marginal, and keeps settlement deterministic.
+      gas: 120000n,
     });
 
     return NextResponse.json({ txHash });
