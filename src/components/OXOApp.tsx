@@ -11,9 +11,10 @@ import { TopBar } from "./TopBar";
 import { Home } from "./Home";
 import { GameScreen } from "./GameScreen";
 import { LeaderboardView } from "./LeaderboardView";
+import { WalletScreen } from "./WalletScreen";
 import { Footer } from "./Footer";
 
-type Screen = "home" | "game" | "leaderboard";
+type Screen = "home" | "game" | "leaderboard" | "wallet";
 
 const screenMotion = {
   initial: { opacity: 0, y: 18, scale: 0.99 },
@@ -48,7 +49,7 @@ export function OXOApp() {
     <main className="relative min-h-[100dvh]">
       <Background />
       <div className="mx-auto flex min-h-[100dvh] w-full max-w-md flex-col px-5 pb-10 pt-5">
-        <TopBar onHome={goHome} />
+        <TopBar onHome={goHome} onOpenWallet={() => { play("select"); setScreen("wallet"); }} />
 
         <div className="flex flex-1 items-start justify-center pt-2">
           <AnimatePresence mode="wait">
@@ -71,6 +72,12 @@ export function OXOApp() {
             {screen === "leaderboard" && (
               <motion.div key="lb" {...screenMotion} className="flex w-full justify-center">
                 <LeaderboardView onHome={goHome} />
+              </motion.div>
+            )}
+
+            {screen === "wallet" && (
+              <motion.div key="wallet" {...screenMotion} className="flex w-full justify-center">
+                <WalletScreen onHome={goHome} />
               </motion.div>
             )}
           </AnimatePresence>

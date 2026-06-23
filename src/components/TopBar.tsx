@@ -7,7 +7,7 @@ import { WalletButton } from "./WalletButton";
 import { SoundToggle } from "./SoundToggle";
 import { MarkGlyph } from "./Mark";
 
-export function TopBar({ onHome }: { onHome?: () => void }) {
+export function TopBar({ onHome, onOpenWallet }: { onHome?: () => void; onOpenWallet?: () => void }) {
   const { balance } = useStore();
   return (
     <header className="flex items-center justify-between gap-3">
@@ -33,7 +33,7 @@ export function TopBar({ onHome }: { onHome?: () => void }) {
           <span className="nums text-ink">{fmtCelo(balance)}</span>{" "}
           <span className="text-ink-faint">CELO</span>
         </motion.div>
-        <WalletButton />
+        <WalletButton onOpenWallet={onOpenWallet} />
         <SoundToggle />
       </div>
     </header>
