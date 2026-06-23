@@ -13,6 +13,7 @@ import {
 } from "@/lib/engine";
 import type { ModeConfig } from "@/lib/modes";
 import { settleGame, useStore, type Outcome } from "@/lib/store";
+import { useOnchain } from "@/hooks/useOnchain";
 import { play, unlockAudio } from "@/lib/sfx";
 import { fmtCelo } from "@/lib/format";
 import { Board } from "./Board";
@@ -26,18 +27,24 @@ export function GameScreen({
   mode,
   onHome,
   onRematch,
+  onchain,
 }: {
   mode: ModeConfig;
   onHome: () => void;
   onRematch: () => void;
+  onchain?: { gameId: `0x${string}`; player: string };
 }) {
   const { balance, settings } = useStore();
+  const { settle } = useOnchain();
   const [board, setBoard] = useState<BoardType>(() => emptyBoard());
   const [turn, setTurn] = useState<Turn>("X");
   const [result, setResult] = useState<Outcome | null>(null);
   const [winLine, setWinLine] = useState<number[] | null>(null);
   const [lastMove, setLastMove] = useState<number | null>(null);
   const [delta, setDelta] = useState(0);
+  const [settling, setSettling] = useState(false);
+  const [settleTx, setSettleTx] = useState<string | null>(null);
+  const [settleErr, setSettleErr] = useState<string | null>(null);
   const settledRef = useRef(false);
 
   const finish = useCallback(
@@ -46,14 +53,22 @@ export function GameScreen({
       settledRef.current = true;
       setWinLine(line);
       setResult(outcome);
-      const d = settleGame(mode.id, outcome);
+      const d = settleGame(mode.id, outcome, { onchain: !!onchain });
       setDelta(d);
       window.setTimeout(() => {
         play(outcome === "win" ? "win" : outcome === "draw" ? "draw" : "lose");
         if (outcome === "win") window.setTimeout(() => play("coin"), 380);
       }, 280);
+      // settle the stake on-chain via the relayer backend
+      if (onchain) {
+        setSettling(true);
+        settle({ gameId: onchain.gameId, mode: mode.id, board: b, outcome, player: onchain.player })
+          .then((tx) => setSettleTx(tx))
+          .catch((e: unknown) => setSettleErr((e as Error)?.message ?? "Settlement failed"))
+          .finally(() => setSettling(false));
+      }
     },
-    [mode.id]
+    [mode.id, onchain, settle]
   );
 
   // resolve a board into win/lose/draw from the human's perspective
@@ -164,6 +179,10 @@ export function GameScreen({
               balance={balance}
               onRematch={onRematch}
               onHome={onHome}
+              onchain={!!onchain}
+              settling={settling}
+              settleTx={settleTx}
+              settleErr={settleErr}
             />
           )}
         </AnimatePresence>

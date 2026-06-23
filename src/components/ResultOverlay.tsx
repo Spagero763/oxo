@@ -1,10 +1,11 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { RotateCcw, Home, Trophy } from "lucide-react";
+import { RotateCcw, Home, Trophy, Loader2, ExternalLink } from "lucide-react";
 import type { Outcome } from "@/lib/store";
 import type { ModeConfig } from "@/lib/modes";
 import { fmtCelo, signed } from "@/lib/format";
+import { CELOSCAN } from "@/lib/contract";
 import { cn } from "@/lib/cn";
 
 const COPY: Record<Outcome, { title: string; sub: string; color: string }> = {
@@ -43,6 +44,10 @@ export function ResultOverlay({
   balance,
   onRematch,
   onHome,
+  onchain,
+  settling,
+  settleTx,
+  settleErr,
 }: {
   outcome: Outcome;
   mode: ModeConfig;
@@ -50,6 +55,10 @@ export function ResultOverlay({
   balance: number;
   onRematch: () => void;
   onHome: () => void;
+  onchain?: boolean;
+  settling?: boolean;
+  settleTx?: string | null;
+  settleErr?: string | null;
 }) {
   const copy = COPY[outcome];
   return (
@@ -77,7 +86,28 @@ export function ResultOverlay({
           <p className={cn("nums mt-1 text-2xl font-bold", delta > 0 ? "text-gold" : delta < 0 ? "text-rose" : "text-ink")}>
             {signed(delta)} CELO
           </p>
-          <p className="nums mt-1 text-xs text-ink-faint">Balance {fmtCelo(balance)} CELO</p>
+          {onchain ? (
+            <div className="mt-1 text-xs">
+              {settling && (
+                <span className="inline-flex items-center gap-1 text-ink-faint">
+                  <Loader2 className="h-3 w-3 animate-spin" /> Settling on-chain…
+                </span>
+              )}
+              {settleTx && (
+                <a
+                  href={`${CELOSCAN}/tx/${settleTx}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1 font-semibold text-teal-bright"
+                >
+                  Settled on-chain <ExternalLink className="h-3 w-3" />
+                </a>
+              )}
+              {settleErr && <span className="text-rose">{settleErr}</span>}
+            </div>
+          ) : (
+            <p className="nums mt-1 text-xs text-ink-faint">Balance {fmtCelo(balance)} CELO</p>
+          )}
         </div>
 
         <div className="mt-5 flex gap-2">
