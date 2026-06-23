@@ -1,14 +1,15 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { useStore } from "@/lib/store";
+import { useCeloBalance } from "@/hooks/useCeloBalance";
 import { fmtCelo } from "@/lib/format";
 import { WalletButton } from "./WalletButton";
 import { SoundToggle } from "./SoundToggle";
 import { MarkGlyph } from "./Mark";
 
 export function TopBar({ onHome, onOpenWallet }: { onHome?: () => void; onOpenWallet?: () => void }) {
-  const { balance } = useStore();
+  const { address, balance } = useCeloBalance();
+
   return (
     <header className="flex items-center justify-between gap-3">
       <button onClick={onHome} className="group flex items-center gap-2">
@@ -24,15 +25,17 @@ export function TopBar({ onHome, onOpenWallet }: { onHome?: () => void; onOpenWa
       </button>
 
       <div className="flex items-center gap-2">
-        <motion.div
-          key={balance}
-          initial={{ scale: 1.08 }}
-          animate={{ scale: 1 }}
-          className="rounded-full glass px-3 py-1.5 text-xs font-semibold"
-        >
-          <span className="nums text-ink">{fmtCelo(balance)}</span>{" "}
-          <span className="text-ink-faint">CELO</span>
-        </motion.div>
+        {address && (
+          <motion.button
+            onClick={onOpenWallet}
+            initial={{ scale: 1.08 }}
+            animate={{ scale: 1 }}
+            className="rounded-full glass px-3 py-1.5 text-xs font-semibold"
+          >
+            <span className="nums text-ink">{balance === null ? "…" : fmtCelo(balance)}</span>{" "}
+            <span className="text-ink-faint">CELO</span>
+          </motion.button>
+        )}
         <WalletButton onOpenWallet={onOpenWallet} />
         <SoundToggle />
       </div>

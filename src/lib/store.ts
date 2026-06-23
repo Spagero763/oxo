@@ -37,38 +37,15 @@ export interface GameRecord {
   at: number;
 }
 
-export interface LeaderEntry {
-  id: string;
-  name: string;
-  color: string;
-  wins: number;
-  losses: number;
-  draws: number;
-  net: number;
-  you?: boolean;
-}
-
 export interface State {
-  balance: number; // play CELO available
+  balance: number; // demo CELO, only used when on-chain staking is off (local dev)
   settings: Settings;
   stats: Stats;
   history: GameRecord[];
-  rivals: LeaderEntry[]; // seeded opponents so the board feels alive
 }
 
 const KEY = "oxo:v1";
-const STARTING_BALANCE = 0.001; // enough play CELO for ~1000 rounds
-
-const RIVALS: LeaderEntry[] = [
-  { id: "r1", name: "nova.celo", color: "#a892ff", wins: 41, losses: 12, draws: 9, net: 0.0000291 },
-  { id: "r2", name: "zerocool", color: "#5eead4", wins: 38, losses: 20, draws: 14, net: 0.0000182 },
-  { id: "r3", name: "graymatter", color: "#f6d66b", wins: 33, losses: 18, draws: 11, net: 0.0000165 },
-  { id: "r4", name: "mira.eth", color: "#fb7185", wins: 29, losses: 22, draws: 8, net: 0.0000087 },
-  { id: "r5", name: "the_grid", color: "#7c5cff", wins: 26, losses: 24, draws: 12, net: 0.0000031 },
-  { id: "r6", name: "minipaymax", color: "#22d3c5", wins: 22, losses: 25, draws: 7, net: -0.0000022 },
-  { id: "r7", name: "lattice", color: "#a892ff", wins: 18, losses: 27, draws: 6, net: -0.0000061 },
-  { id: "r8", name: "checksum", color: "#f6d66b", wins: 14, losses: 31, draws: 5, net: -0.0000113 },
-];
+const STARTING_BALANCE = 0.001;
 
 function freshState(): State {
   return {
@@ -76,7 +53,6 @@ function freshState(): State {
     settings: { name: "You", soundOn: true, volume: 0.85 },
     stats: { played: 0, won: 0, lost: 0, drawn: 0, net: 0, streak: 0, bestStreak: 0 },
     history: [],
-    rivals: RIVALS.map((r) => ({ ...r })),
   };
 }
 
@@ -222,22 +198,6 @@ export function settleGame(mode: Difficulty, outcome: Outcome, opts?: { onchain?
 export function resetBalance(): void {
   load();
   mutate({ balance: STARTING_BALANCE });
-}
-
-/** Builds the leaderboard with the live player slotted in, sorted by net. */
-export function leaderboard(): LeaderEntry[] {
-  load();
-  const you: LeaderEntry = {
-    id: "you",
-    name: state.settings.name || "You",
-    color: "#ffffff",
-    wins: state.stats.won,
-    losses: state.stats.lost,
-    draws: state.stats.drawn,
-    net: state.stats.net,
-    you: true,
-  };
-  return [...state.rivals, you].sort((a, b) => b.net - a.net || b.wins - a.wins);
 }
 
 function round(n: number): number {

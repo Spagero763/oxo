@@ -1,11 +1,13 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Trophy, ChevronRight, RefreshCw, Wallet, Gamepad2, Coins } from "lucide-react";
+import { Trophy, ChevronRight, Wallet, Gamepad2, Coins } from "lucide-react";
 import { MODE_LIST } from "@/lib/modes";
-import { leaderboard, resetBalance, useStore } from "@/lib/store";
-import { fmtCelo, signed } from "@/lib/format";
+import { useStore } from "@/lib/store";
+import { signed } from "@/lib/format";
 import { play } from "@/lib/sfx";
+import { ONCHAIN_ENABLED } from "@/hooks/useOnchain";
+import { useCeloBalance } from "@/hooks/useCeloBalance";
 import { ModeCard } from "./ModeCard";
 import { ShareButton } from "./ShareButton";
 import { cn } from "@/lib/cn";
@@ -24,9 +26,11 @@ export function Home({
   onLeaderboard: () => void;
 }) {
   const { balance, stats } = useStore();
-  const top = leaderboard().slice(0, 3);
+  const { balance: walletBalance } = useCeloBalance();
   const winRate = stats.played ? Math.round((stats.won / stats.played) * 100) : 0;
-  const lowBalance = balance < MODE_LIST[0].stake;
+
+  // when on-chain, affordability is enforced by the stake tx itself
+  const affordable = (stake: number) => (ONCHAIN_ENABLED ? true : balance >= stake);
 
   return (
     <div className="flex w-full max-w-md flex-col">
@@ -49,7 +53,7 @@ export function Home({
         </p>
       </motion.div>
 
-      {/* stats strip */}
+      {/* personal record */}
       <motion.div variants={fade} custom={1} initial="hidden" animate="show" className="mt-6 grid grid-cols-3 gap-2">
         {[
           { label: "Win rate", value: `${winRate}%`, c: "text-violet-bright" },
@@ -66,28 +70,16 @@ export function Home({
       {/* mode cards */}
       <motion.div variants={fade} custom={2} initial="hidden" animate="show" className="mt-4 grid gap-3">
         {MODE_LIST.map((m) => (
-          <ModeCard key={m.id} mode={m} affordable={balance >= m.stake} onPlay={() => onPlay(m.id)} />
+          <ModeCard key={m.id} mode={m} affordable={affordable(m.stake)} onPlay={() => onPlay(m.id)} />
         ))}
       </motion.div>
-
-      {lowBalance && (
-        <button
-          onClick={() => {
-            play("coin");
-            resetBalance();
-          }}
-          className="mt-3 inline-flex items-center justify-center gap-2 rounded-2xl glass py-3 text-sm font-semibold text-teal-bright"
-        >
-          <RefreshCw className="h-4 w-4" /> Top up demo balance
-        </button>
-      )}
 
       {/* how it works */}
       <motion.div variants={fade} custom={3} initial="hidden" animate="show" className="mt-5">
         <p className="mb-2 text-[11px] uppercase tracking-widest text-ink-faint">How it works</p>
         <div className="grid grid-cols-3 gap-2">
           {[
-            { icon: Wallet, t: "Pick a mode", d: "Normal or Hard" },
+            { icon: Wallet, t: "Connect & fund", d: "Your Celo wallet" },
             { icon: Gamepad2, t: "Beat the bot", d: "You play X, first move" },
             { icon: Coins, t: "Take the pot", d: "Win pays up to 3×" },
           ].map((s, i) => (
@@ -105,13 +97,13 @@ export function Home({
         </div>
       </motion.div>
 
-      {/* leaderboard preview */}
+      {/* leaderboard */}
       <motion.button
         variants={fade}
-        custom={3}
+        custom={4}
         initial="hidden"
         animate="show"
-        onClick={onLeaderboard}
+        onClick={() => { play("select"); onLeaderboard(); }}
         className="mt-4 flex items-center gap-3 rounded-3xl glass p-4 text-left transition-colors hover:bg-white/[0.05]"
       >
         <span className="grid h-10 w-10 place-items-center rounded-2xl bg-gold/15 text-gold">
@@ -119,20 +111,17 @@ export function Home({
         </span>
         <div className="flex-1">
           <p className="text-sm font-semibold text-ink">Leaderboard</p>
-          <p className="text-xs text-ink-faint">
-            {top.map((t, i) => (
-              <span key={t.id}>
-                {i > 0 && " · "}
-                <span className={t.you ? "text-violet-bright" : ""}>{t.name.split(".")[0]}</span>
-              </span>
-            ))}
-          </p>
+          <p className="text-xs text-ink-faint">Live, on-chain results</p>
         </div>
         <ChevronRight className="h-5 w-5 text-ink-faint" />
       </motion.button>
 
       <p className="mt-5 text-center text-[11px] text-ink-faint">
-        Balance {fmtCelo(balance)} CELO · draws refund your stake
+        {ONCHAIN_ENABLED
+          ? walletBalance !== null
+            ? "Stakes settle on Celo · draws refund your stake"
+            : "Connect your wallet to stake and play"
+          : "Demo mode · draws refund your stake"}
       </p>
     </div>
   );
